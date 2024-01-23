@@ -1,8 +1,73 @@
-version: "2.2"
+version: "3"
+
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  postgresql:
+  postgresql_data:
+  mysql_conf:
+  mysql_logs:
+  mysql_data:
 
 services:
+  sonarqube:
+    image: sonarqube:lts
+    hostname: sonarqube
+    container_name: sonarqube
+    depends_on:
+      - postgres
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql:/postgres:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_WEB_JAVAADDITIONALOPTS: -javaagent:/opt/RASP/imperva-agent-4.4.1.jar -Dimperva.config=/opt/RASP/imperva-4.4.0-testami-e-cancellami.json -Dimperva.raspjarpath=/opt/RASP/imperva-rasp-4.4.1.jar
+      SONAR_CE_JAVAADDITIONALOPTS: -javaagent:/opt/RASP/imperva-agent-4.4.1.jar -Dimperva.config=/opt/RASP/imperva-4.4.0-testami-e-cancellami.json -Dimperva.raspjarpath=/opt/RASP/imperva-rasp-4.4.1.jar
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+      # PATH TO RASP - CHANGE IT
+      - "D:\\consulthink\\imperva\\spring-petclinic\\RASP\\:/opt/RASP/"
+    ports:
+      - "9000:9000"
+
+  postgres:
+    image: postgres:13
+    hostname: postgres
+    container_name: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonar
+    volumes:
+      - postgresql:/var/lib/postgresql
+      - postgresql_data:/var/lib/postgresql/data
+
+  spring-clinic:
+    image: spring-clinic
+    container_name: clinic
+    build:
+      context: ./spring-pectlinic
+      dockerfile: Dockerfile
+    depends_on:
+      - mysql
+    ports:
+      - 8080:8080
+    environment:
+      - MYSQL_URL=jdbc:mysql://mysql/petclinic
+      - MYSQL_USER=petclinic
+      - MYSQL_PASS=petclinic
+    volumes:
+      #- /data/spring-boot-app
+      # CHANGE RASP PATH
+      - D:\consulthink\imperva\spring-petclinic\RASP\:/opt/RASP/
+
   mysql:
     image: mysql:8.2
+    container_name: mysql
     ports:
       - "3306:3306"
     environment:
@@ -12,16 +77,8 @@ services:
       - MYSQL_PASSWORD=petclinic
       - MYSQL_DATABASE=petclinic
     volumes:
-      - "./conf.d:/etc/mysql/conf.d:ro"
-    profiles:
-      - mysql
-  postgres:
-    image: postgres:16.1
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_PASSWORD=petclinic
-      - POSTGRES_USER=petclinic
-      - POSTGRES_DB=petclinic
-    profiles:
-      - postgres
+      - mysql_conf:/etc/mysql/
+      - mysql_logs:/logs
+      - mysql_data:/var/lib/mysql
+
+
