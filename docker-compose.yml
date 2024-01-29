@@ -1,12 +1,9 @@
-version: "3"
+version: '3'
 
 services:
-  tomcat_jenkins:
-    image: tomcat:latest
-    container_name: tomcat_jenkins
+  tomcat-jenkins:
+    image: tomcat
     ports:
       - "8080:8080"
     volumes:
-      - ./jenkins.war:/usr/local/tomcat/webapps/jenkins.war
-    environment:
-      - CATALINA_OPTS=-Djenkins.install.runSetupWizard=false
+      - ./sample.war:/usr/local/tomcat/webapps/sample.war
