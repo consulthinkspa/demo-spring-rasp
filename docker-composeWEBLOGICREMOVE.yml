@@ -1,0 +1,40 @@
+version: '3'
+services:
+  oracle-db:
+    image: babim/oracledatabase:11.2.0.4
+    container_name: oracle-db-container
+    environment:
+      - ORACLE_SID=ORCLCDB
+      - ORACLE_PDB=ORCLPDB1
+      - ORACLE_PWD=password
+      - ORACLE_CHARACTERSET=AL32UTF8
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    networks:
+      - app-network
+ 
+  weblogic-server:
+    image: opavlova/weblogic:12.2.1
+    container_name: weblogic-server-container
+    environment:
+      - DOMAIN_NAME=weblogic
+      - ADMIN_NAME=admin
+      - ADMIN_LISTEN_PORT=7001
+      - ADMINISTRATION_PORT_ENABLED=true
+      - ADMINISTRATION_PORT=9002
+      - username=weblogic
+      - password=weblogic
+    ports:
+      - "7001:7001"
+      - "9002:9002"
+    volumes:
+      - ./weblogic:/u01/oracle/user_projects
+    depends_on:
+      - oracle-db
+    networks:
+      - app-network
+ 
+networks:
+  app-network:
+    driver: bridge
